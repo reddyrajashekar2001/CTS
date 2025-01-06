@@ -25,7 +25,6 @@ headers = {
 }
 
 # Send the login request
-print(f"Sending login request for user: {iics_username}...")
 response = requests.post(url, headers=headers, data=payload)
 
 # Check if the response is successful
@@ -34,8 +33,6 @@ if response.status_code == 200:
     user_groups = data.get('usergroups', [])
     user_name = data.get('name')
     user_email = data.get('emails')
-
-    print(f"Login successful for user: {user_name}")
 
     # Load the mapping of user groups to project folders
     with open('scripts/user_groups_mapping.json', 'r') as f:
@@ -46,21 +43,13 @@ if response.status_code == 200:
 
     # Use git show to get the affected files for the given commit hash
     try:
-        print(f"Running git show for commit {commit_hash}...")
         git_show_output = subprocess.check_output(['git', 'show', '--name-only', '--oneline', commit_hash], stderr=subprocess.STDOUT)
         affected_files = git_show_output.decode('utf-8').splitlines()[1:]  # Skip the first line (commit hash)
-
-        if not affected_files:
-            print(f"No files affected by commit {commit_hash}.")
-            sys.exit(1)
-
-        print(f"Affected files for commit {commit_hash}:")
-        for file in affected_files:
-            print(f"- {file}")
 
         # Check if any of the affected files belong to the project folder under "Explore"
         project_folder = None
         for file in affected_files:
+            # Check if the file is under the "Explore" folder and determine the project folder
             if file.startswith('Explore/'):
                 project_folder = file.split('/')[1]  # Get the project folder name (first level under Explore)
                 break
@@ -68,8 +57,6 @@ if response.status_code == 200:
         if project_folder is None:
             print(f"No project folder found for commit {commit_hash}.")
             sys.exit(1)
-
-        print(f"Detected project folder: {project_folder}")
 
         # Check if the user is authorized for the project folder
         if user_name in mapping.get(project_folder, []):
