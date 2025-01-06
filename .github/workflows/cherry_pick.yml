@@ -78,29 +78,41 @@ jobs:
           IICS_USERNAME: ${{ secrets.IICS_USERNAME }}
           IICS_PASSWORD: ${{ secrets.IICS_PASSWORD }}
 
-      # Step 8: Fetch the source branch from which the cherry-pick is to be made
+      # Step 8: Configure Git User (using response from IICS login)
+      - name: Configure Git User
+        run: |
+          git config --global user.name "${{ steps.run_iics_login_and_validation.outputs.username }}"
+          git config --global user.email "${{ steps.run_iics_login_and_validation.outputs.email }}"
+
+      # Step 9: Fetch the source branch from which the cherry-pick is to be made
       - name: Fetch Source Branch
         run: |
           git fetch origin ${{ inputs.from_branch }}:${{ inputs.from_branch }}
 
-      # Step 9: Cherry-pick the commit from the source branch to the target branch
+      # Step 10: Checkout the source branch
+      - name: Checkout Source Branch
+        run: |
+          git checkout ${{ inputs.from_branch }}
+
+      # Step 11: Cherry-pick the commit from the source branch to the target branch
       - name: Cherry-pick Commit with Recursive Strategy and -X theirs
         run: |
+          git checkout ${{ inputs.to_branch }}
           git cherry-pick --strategy=recursive -X theirs ${{ inputs.commit_hash }}
 
-      # Step 10: Temporarily ignore the 'scripts' folder before pushing to remote
+      # Step 12: Temporarily ignore the 'scripts' folder before pushing to remote
       - name: Temporarily Ignore Scripts Folder
         run: |
           echo "scripts/" >> .gitignore
 
-      # Step 11: Push changes to the remote repository
+      # Step 13: Push changes to the remote repository
       - name: Push Changes to Remote
         run: |
           git add .
           git commit -m "Cherry-pick commit ${{ inputs.commit_hash }} from ${{ inputs.from_branch }}"
           git push origin ${{ inputs.to_branch }}
 
-      # Step 12: Remove the 'scripts' folder from .gitignore after pushing (if needed)
+      # Step 14: Remove the 'scripts' folder from .gitignore after pushing (if needed)
       - name: Remove Scripts Folder from .gitignore
         run: |
           sed -i '/scripts\//d' .gitignore
