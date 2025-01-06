@@ -34,6 +34,11 @@ if response.status_code == 200:
     user_name = data.get('name')
     user_email = data.get('emails')
 
+    # Configure Git User with the response data
+    if user_name and user_email:
+        subprocess.run(['git', 'config', '--global', 'user.name', user_name])
+        subprocess.run(['git', 'config', '--global', 'user.email', user_email])
+
     # Load the mapping of user groups to project folders
     with open('scripts/user_groups_mapping.json', 'r') as f:
         mapping = json.load(f)
