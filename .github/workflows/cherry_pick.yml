@@ -39,12 +39,11 @@ jobs:
           ref: ${{ inputs.to_branch }}
           fetch-depth: 0  # Fetch full history for cherry-pick
 
-      # Step 2: Checkout the default branch (scripts folder) to access the scripts
-      - name: Checkout Default Branch (Scripts Folder)
+      # Step 2: Checkout the entire repository (to access the scripts folder)
+      - name: Checkout Entire Repository
         uses: actions/checkout@v4
         with:
           ref: main  # or your default branch
-          path: scripts  # Checkout only the scripts folder to a specific directory
 
       # Step 3: List the files in the repository (for debugging)
       - name: List files in the repository
@@ -56,19 +55,20 @@ jobs:
         with:
           python-version: '3.x'
 
-      # Step 5: Debugging Step - Check if requirements.txt exists
-      # - name: Check if requirements.txt exists
-      #   run: |
-      #     if exist scripts/requirements.txt (
-      #       echo "requirements.txt found"
-      #     ) else (
-      #       echo "requirements.txt not found"
-      #       exit 1
-      #     )
+      # Step 5: Check if requirements.txt exists
+      - name: Check if requirements.txt exists
+        run: |
+          if (Test-Path "scripts/requirements.txt") {
+            Write-Host "requirements.txt found"
+          } else {
+            Write-Host "requirements.txt not found"
+            exit 1
+          }
+        shell: pwsh
 
       # Step 6: Install Requirements for the scripts
       - name: Install Requirements
-        run: pip install requests
+        run: pip install -r scripts/requirements.txt
 
       # Step 7: Run IICS Login and Validation
       - name: Run IICS Login and Validation
