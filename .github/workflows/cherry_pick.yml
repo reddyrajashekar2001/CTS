@@ -68,7 +68,7 @@ jobs:
 
       # Step 6: Install Requirements for the scripts
       - name: Install Requirements
-        run: pip install -r scripts/requirements.txt
+        run: pip install requests
 
       # Step 7: Run IICS Login and Validation
       - name: Run IICS Login and Validation
