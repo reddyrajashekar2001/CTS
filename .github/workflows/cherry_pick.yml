@@ -81,8 +81,8 @@ jobs:
       # Step 8: Configure Git User (using response from IICS login)
       - name: Configure Git User
         run: |
-          git config --global user.name "${{ steps.run_iics_login_and_validation.outputs.username }}"
-          git config --global user.email "${{ steps.run_iics_login_and_validation.outputs.email }}"
+          git config --global user.name 2320618_DEV
+          git config --global user.email rajashekar.reddy@cognizant.com
 
       # Step 9: Fetch the source branch from which the cherry-pick is to be made
       - name: Fetch Source Branch
