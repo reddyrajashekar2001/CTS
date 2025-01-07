@@ -108,14 +108,14 @@ jobs:
       # Step 13: Push changes to the remote repository
       - name: Push Changes to Remote
         run: |
-          git add .
-          git commit -m "Cherry-pick commit ${{ inputs.commit_hash }} from ${{ inputs.from_branch }}"
+          # git add .
+          # git commit -m "Cherry-pick commit ${{ inputs.commit_hash }} from ${{ inputs.from_branch }}"
           git push origin ${{ inputs.to_branch }}
 
       # Step 14: Remove the 'scripts' folder from .gitignore after pushing (if needed)
-      - name: Remove Scripts Folder from .gitignore
-        run: |
-          sed -i '/scripts\//d' .gitignore
-          git add .gitignore
-          git commit -m "Remove scripts folder from .gitignore"
-          git push origin ${{ inputs.to_branch }}
+      # - name: Remove Scripts Folder from .gitignore
+      #   run: |
+      #     sed -i '/scripts\//d' .gitignore
+      #     # git add .gitignore
+      #     # git commit -m "Remove scripts folder from .gitignore"
+      #     git push origin ${{ inputs.to_branch }}
