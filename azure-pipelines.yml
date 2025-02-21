@@ -1,121 +1,49 @@
-name: Cherry Pick Commit on GitHub-Hosted Windows
+trigger:
+- main
 
-on:
-  workflow_dispatch:
-    inputs:
-      from_branch:
-        description: "Branch to cherry-pick from (source branch)"
-        required: true
-        type: string
-      to_branch:
-        description: "Branch to cherry-pick to (target branch)"
-        required: true
-        type: string
-      commit_hash:
-        description: "6-digit commit hash to cherry-pick"
-        required: true
-        type: string
-      iics_username:
-        description: "IICS username for login"
-        required: true
-        type: string
-      iics_password:
-        description: "IICS password for login"
-        required: true
-        type: string
+pool:
+  vmImage: 'windows-latest'
 
-permissions:
-  contents: write  # Ensure permissions to push changes
+variables:
+  from_branch: ''
+  to_branch: ''
+  commit_hash: ''
+  iics_username: ''
+  iics_password: ''
 
 jobs:
-  cherry-pick:
-    runs-on: windows-latest  # Use GitHub-hosted Windows runner
+- job: cherry_pick
+  displayName: 'Cherry Pick Commit on GitHub-Hosted Windows'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+      addToPath: true
 
-    steps:
-      # Step 1: Checkout the target branch (where the cherry-pick will be applied)
-      - name: Checkout Target Branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.to_branch }}
-          fetch-depth: 0  # Fetch full history for cherry-pick
+  - script: |
+      git config --global user.name '2320618_DEV'
+      git config --global user.email 'rajashekar.reddy@cognizant.com'
+    displayName: 'Configure Git User'
 
-      # Step 2: Checkout the entire repository (to access the scripts folder)
-      - name: Checkout Entire Repository
-        uses: actions/checkout@v4
-        with:
-          ref: main  # or your default branch
+  - script: |
+      git fetch origin $(from_branch):$(from_branch)
+    displayName: 'Fetch Source Branch'
 
-      # Step 3: List the files in the repository (for debugging)
-      - name: List files in the repository
-        run: dir
+  - script: |
+      git checkout $(from_branch)
+    displayName: 'Checkout Source Branch'
 
-      # Step 4: Install Python
-      - name: Install Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+  - script: |
+      git checkout $(to_branch)
+      git cherry-pick --strategy=recursive -X theirs $(commit_hash)
+    displayName: 'Cherry-pick Commit with Recursive Strategy and -X theirs'
 
-      # Step 5: Check if requirements.txt exists
-      - name: Check if requirements.txt exists
-        run: |
-          if (Test-Path "scripts/requirements.txt") {
-            Write-Host "requirements.txt found"
-          } else {
-            Write-Host "requirements.txt not found"
-            exit 1
-          }
-        shell: pwsh
+  - script: |
+      echo "scripts/" >> .gitignore
+    displayName: 'Temporarily Ignore Scripts Folder'
 
-      # Step 6: Install Requirements for the scripts
-      - name: Install Requirements
-        run: pip install -r scripts/requirements.txt
-
-      # Step 7: Run IICS Login and Validation
-      - name: Run IICS Login and Validation
-        run: |
-          python scripts/iics_login_and_validate.py ${{ inputs.iics_username }} ${{ inputs.iics_password }} ${{ inputs.commit_hash }}
-        env:
-          IICS_USERNAME: ${{ secrets.IICS_USERNAME }}
-          IICS_PASSWORD: ${{ secrets.IICS_PASSWORD }}
-
-      # Step 8: Configure Git User (using response from IICS login)
-      - name: Configure Git User
-        run: |
-          git config --global user.name 2320618_DEV
-          git config --global user.email rajashekar.reddy@cognizant.com
-
-      # Step 9: Fetch the source branch from which the cherry-pick is to be made
-      - name: Fetch Source Branch
-        run: |
-          git fetch origin ${{ inputs.from_branch }}:${{ inputs.from_branch }}
-
-      # Step 10: Checkout the source branch
-      - name: Checkout Source Branch
-        run: |
-          git checkout ${{ inputs.from_branch }}
-
-      # Step 11: Cherry-pick the commit from the source branch to the target branch
-      - name: Cherry-pick Commit with Recursive Strategy and -X theirs
-        run: |
-          git checkout ${{ inputs.to_branch }}
-          git cherry-pick --strategy=recursive -X theirs ${{ inputs.commit_hash }}
-
-      # Step 12: Temporarily ignore the 'scripts' folder before pushing to remote
-      - name: Temporarily Ignore Scripts Folder
-        run: |
-          echo "scripts/" >> .gitignore
-
-      # Step 13: Push changes to the remote repository
-      - name: Push Changes to Remote
-        run: |
-          # git add .
-          # git commit -m "Cherry-pick commit ${{ inputs.commit_hash }} from ${{ inputs.from_branch }}"
-          git push origin ${{ inputs.to_branch }}
-
-      # Step 14: Remove the 'scripts' folder from .gitignore after pushing (if needed)
-      # - name: Remove Scripts Folder from .gitignore
-      #   run: |
-      #     sed -i '/scripts\//d' .gitignore
-      #     # git add .gitignore
-      #     # git commit -m "Remove scripts folder from .gitignore"
-      #     git push origin ${{ inputs.to_branch }}
+  - script: |
+      git add .
+      git commit -m "Cherry-pick commit $(commit_hash)"
+      git push origin $(to_branch)
+    displayName: 'Push Changes to Remote'
