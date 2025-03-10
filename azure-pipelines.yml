@@ -4,46 +4,28 @@ trigger:
 pool:
   vmImage: 'windows-latest'
 
-variables:
-  from_branch: ''
-  to_branch: ''
-  commit_hash: ''
-  iics_username: ''
-  iics_password: ''
 
 jobs:
-- job: cherry_pick
-  displayName: 'Cherry Pick Commit on GitHub-Hosted Windows'
+- job: Build
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.x'
-      addToPath: true
+    - script: echo "Hello, approval please"
+      displayName: 'Initial Greeting'
 
-  - script: |
-      git config --global user.name '2320618_DEV'
-      git config --global user.email 'rajashekar.reddy@cognizant.com'
-    displayName: 'Configure Git User'
+- job: Approval
+  dependsOn: Build
+  pool: server
+  steps:
+    - task: ManualValidation@0
+      inputs:
+        instructions: 'Please approve to proceed to the next step.'
+        notifyUsers: krajashekar.reddy@cognizant.com
+        onTimeout: 'reject'
+      displayName: 'Approval Gate'
 
-  - script: |
-      git fetch origin $(from_branch):$(from_branch)
-    displayName: 'Fetch Source Branch'
-
-  - script: |
-      git checkout $(from_branch)
-    displayName: 'Checkout Source Branch'
-
-  - script: |
-      git checkout $(to_branch)
-      git cherry-pick --strategy=recursive -X theirs $(commit_hash)
-    displayName: 'Cherry-pick Commit with Recursive Strategy and -X theirs'
-
-  - script: |
-      echo "scripts/" >> .gitignore
-    displayName: 'Temporarily Ignore Scripts Folder'
-
-  - script: |
-      git add .
-      git commit -m "Cherry-pick commit $(commit_hash)"
-      git push origin $(to_branch)
-    displayName: 'Push Changes to Remote'
+- job: Deploy
+  dependsOn: Approval
+  pool:
+    name: default
+  steps:
+    - script: echo "Hi, welcome to IICS"
+      displayName: 'Final Greeting'
