@@ -4,9 +4,10 @@ trigger:
 pool:
   vmImage: 'windows-latest'
 
-
 jobs:
 - job: Build
+  pool:
+    vmImage: 'windows-latest'
   steps:
     - script: echo "Hello, approval please"
       displayName: 'Initial Greeting'
