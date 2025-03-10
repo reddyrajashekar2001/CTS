@@ -25,7 +25,7 @@ jobs:
 - job: Deploy
   dependsOn: Approval
   pool:
-    name: default
+    vmImage: 'windows-latest'
   steps:
     - script: echo "Hi, welcome to IICS"
       displayName: 'Final Greeting'
