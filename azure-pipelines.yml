@@ -19,7 +19,7 @@ jobs:
     - task: ManualValidation@0
       inputs:
         instructions: 'Please approve to proceed to the next step.'
-        notifyUsers: krajashekar.reddy@cognizant.com
+        notifyUsers: krajashekar.reddy@cognizant.com,reddyrajashekar008@gmail.com
         onTimeout: 'reject'
       displayName: 'Approval Gate'
 
